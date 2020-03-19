@@ -625,18 +625,21 @@ class Env(object):
     def read_env(cls, env_file=None, **overrides):
         """Read a .env file into os.environ.
 
-        If not given a path to a dotenv path, does filthy magic stack backtracking
-        to find manage.py and then find the dotenv.
-
-        http://www.wellfireinteractive.com/blog/easier-12-factor-django/
-
-        https://gist.github.com/bennylope/2999704
+        :param env_file: The path to the `.env` file your application should
+            use. If a path is not provided, `read_env` will attempt to import
+            the Django settings module and use the BASE_DIR constant to find
+            the .env file. Failing that, it will create an INFO-level log
+            message that no `.env` file was found and continue on.
+        :param **overrides: Any additional keyword arguments provided directly 
+            to read_env will be added to the environment. If the key matches an
+            existing environment variable, the value will be overridden.
         """
         if env_file is None:
-            frame = sys._getframe()
-            env_file = os.path.join(os.path.dirname(frame.f_back.f_code.co_filename), '.env')
-            if not os.path.exists(env_file):
-                warnings.warn(
+            try:
+                from django.conf import settings
+                env_file = os.path.join(settings.BASE_DIR, '.env')
+            except ImportError:
+                logger.info(
                     "%s doesn't exist - if you're not configuring your "
                     "environment separately, create one." % env_file)
                 return
@@ -667,6 +670,7 @@ class Env(object):
         # set defaults
         for key, value in overrides.items():
             cls.ENVIRON.setdefault(key, value)
+
 
 
 class Path(object):
