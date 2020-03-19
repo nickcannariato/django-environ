@@ -638,7 +638,7 @@ class Env(object):
             try:
                 from django.conf import settings
                 env_file = os.path.join(settings.BASE_DIR, '.env')
-            except ImportError:
+            except (ImportError, NameError):
                 logger.info(
                     "%s doesn't exist - if you're not configuring your "
                     "environment separately, create one." % env_file)
